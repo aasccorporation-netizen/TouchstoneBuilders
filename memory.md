@@ -3,7 +3,6 @@
 > **Last updated:** June 1, 2026
 > **Project directory:** `C:\Touchstone Builders\touchstone-builders`
 > **GitHub:** https://github.com/aasccorporation-netizen/TouchstoneBuilders
-> **Latest commit:** `9eb73d2` — "Phase 1 foundation: Next.js + Supabase + auth + dashboard"
 
 ---
 
@@ -287,6 +286,10 @@ Builders Supply Co, National Lumber Inc, Pipe & Fittings Direct, Power Tools War
 ### Browser Testing
 - Tested via browser-use agent: login page, auth routes, private route redirections, favicon, responsiveness all working correctly
 - No console errors found after key prop fix
+
+### Product Form Refinements
+- **SKU Field** — Added full label "SKU (Stock Keeping Unit)" with helper text explaining the CATEGORY-PREFIX + NUMBER format, auto-uppercase on input, and `font-mono` styling
+- **Inline Category Creation** — Added "+ Add Category" button next to the Category dropdown that opens an inline dialog to create a new category on the fly. Newly created categories are auto-selected after creation.
 
 ---
 

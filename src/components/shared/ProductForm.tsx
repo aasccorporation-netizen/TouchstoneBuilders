@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Save, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -49,6 +57,45 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   const [saving, setSaving] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(product?.category_id ?? "");
   const [selectedUnit, setSelectedUnit] = useState(product?.unit ?? "piece");
+  const [categoryList, setCategoryList] = useState<Category[]>(categories);
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+
+  const handleAddCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    setCreatingCategory(true);
+    const slug = name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("categories")
+      .insert({ name, slug, description: "" })
+      .select("id, name, slug")
+      .single();
+
+    if (error) {
+      toast.error(error.message);
+      setCreatingCategory(false);
+      return;
+    }
+
+    toast.success(`Category "${name}" created`);
+    setCategoryList((prev) => [...prev, data]);
+    setSelectedCategory(data.id);
+    setNewCategoryName("");
+    setNewCategoryDialogOpen(false);
+    setCreatingCategory(false);
+  };
+
+  const handleCategoryChange = (value: string | null) => {
+    if (value) setSelectedCategory(value);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -99,15 +146,32 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-6 sm:grid-cols-2">
         {/* SKU */}
-        <div className="space-y-2">
-          <Label htmlFor="sku">SKU *</Label>
+        <div className="space-y-2 sm:col-span-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="sku" className="font-semibold">
+              SKU <span className="text-xs font-normal text-muted-foreground">(Stock Keeping Unit)</span> *
+            </Label>
+          </div>
           <Input
             id="sku"
             name="sku"
             defaultValue={product?.sku}
-            placeholder="e.g. PLY-34"
+            placeholder="e.g. PLY-34 for Plywood, PVC-210 for PVC Pipe"
             required
+            onChange={(e) => {
+              // Auto-uppercase for consistency
+              const start = e.target.selectionStart;
+              const end = e.target.selectionEnd;
+              e.target.value = e.target.value.toUpperCase();
+              e.target.setSelectionRange(start, end);
+            }}
+            className="font-mono text-sm uppercase"
           />
+          <p className="text-xs text-muted-foreground">
+            A unique code to identify this product. Common format:{" "}
+            <span className="font-medium">CATEGORY-PREFIX + NUMBER</span>{" "}
+            (e.g. PLY-34, PVC-210, NAIL-16D). SKUs are automatically uppercased.
+          </p>
         </div>
 
         {/* Name */}
@@ -124,13 +188,25 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
         {/* Category */}
         <div className="space-y-2">
-          <Label>Category</Label>
-          <Select value={selectedCategory} onValueChange={(val) => setSelectedCategory(val ?? "")}>
+          <div className="flex items-center justify-between">
+            <Label>Category</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setNewCategoryDialogOpen(true)}
+            >
+              <Plus className="h-3 w-3" />
+              Add Category
+            </Button>
+          </div>
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat) => (
+              {categoryList.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}
                 </SelectItem>
@@ -208,6 +284,56 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           />
         </div>
       </div>
+
+      {/* New Category Dialog */}
+      <Dialog open={newCategoryDialogOpen} onOpenChange={(open) => {
+        setNewCategoryDialogOpen(open);
+        if (!open) setNewCategoryName("");
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddCategory();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>New Category</DialogTitle>
+              <DialogDescription>
+                Add a new category to organize your products
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-category-name">Category Name</Label>
+                <Input
+                  id="new-category-name"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="e.g. Drywall, Insulation, Gutters"
+                  autoFocus
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setNewCategoryDialogOpen(false);
+                  setNewCategoryName("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creatingCategory || !newCategoryName.trim()}>
+                {creatingCategory ? "Creating..." : "Create Category"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Description */}
       <div className="space-y-2">
