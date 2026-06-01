@@ -1,9 +1,25 @@
 // Run with: npx tsx db/seed.ts
 // Seeds the database with hardware store data
 
-const SUPABASE_URL = "https://nfqzvfizcjpqphulemnl.supabase.co";
+// Load credentials from environment variables
+// Set these before running: npx tsx db/seed.ts
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://nfqzvfizcjpqphulemnl.supabase.co";
+
 const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mcXp2Zml6Y2pwcXBodWxlbW5sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDMxNDY5NSwiZXhwIjoyMDk1ODkwNjk1fQ.-RWV5x4Ke40ju-NlF0nHdEm7-5bpioHikcxKLQJOrX4";
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SERVICE_ROLE_KEY ||
+  "";
+
+if (!SERVICE_ROLE_KEY) {
+  console.error("❌ Missing service_role key!");
+  console.error("   Set it as an environment variable:");
+  console.error("   SUPABASE_SERVICE_ROLE_KEY=your_key npx tsx db/seed.ts");
+  console.error("   Or copy it from supabase.txt into .env.local as:");
+  console.error("   SUPABASE_SERVICE_ROLE_KEY=your_key");
+  process.exit(1);
+}
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${SUPABASE_URL}${path}`;
@@ -186,7 +202,7 @@ async function main() {
   console.log(`  ✓ ${products.length} products`);
 
   console.log("Inserting customers...");
-  await upsert("/rest/v1/customers", customers, "name");
+  await upsert("/rest/v1/customers", customers, "phone");
   console.log(`  ✓ ${customers.length} customers`);
 
   console.log("Inserting suppliers...");

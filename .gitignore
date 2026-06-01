@@ -26,6 +26,10 @@ yarn-error.log*
 .env.local
 .env*.local
 
+# secret files (do not commit)
+supabase.txt
+github.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
