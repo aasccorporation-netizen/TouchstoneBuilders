@@ -80,6 +80,7 @@ export function Sidebar() {
           const isActive = pathname === item.href;
           return (
             <Link
+              key={item.href}
               href={item.href}
               className={buttonVariants({
                 variant: "ghost",

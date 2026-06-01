@@ -243,6 +243,7 @@ Builders Supply Co, National Lumber Inc, Pipe & Fittings Direct, Power Tools War
 
 ✅ Build passes cleanly — `npm run build` succeeds with zero TypeScript errors.
 ✅ 13 pages compiled (dashboard + 6 section placeholders + login + callback + error page + layout files)
+✅ Lint passes cleanly — `npm run lint` reports zero errors, zero warnings.
 ⚠️ Warning: Next.js middleware file convention is deprecated — should migrate to `proxy` convention in future.
 
 ---
@@ -275,7 +276,21 @@ Builders Supply Co, National Lumber Inc, Pipe & Fittings Direct, Power Tools War
 
 ---
 
-## 12. Useful Commands
+## 12. Recent Changes (June 1, 2026)
+
+### Lint & Key Prop Fixes
+- **Sidebar.tsx** — Added missing `key={item.href}` prop to `<Link>` in `navItems.map()` (resolved "each child in a list should have a unique key" console warning)
+- **db/seed.ts** — Removed unused `conflictColumn` parameter from `upsert()`, changed `let` to `const` for `categoryMap`, replaced `any` with generic `<T>` type, cleaned up all `upsert()` call sites
+- **categories/page.tsx** — Removed unused imports (`Edit`, `Link`, `useCallback`), refactored `fetchData` from `useCallback` to plain async function with async IIFE in `useEffect` to fix `set-state-in-effect` lint error, fixed `supabase` scoping in event handlers (now creates client locally)
+- **inventory/page.tsx** — Removed unused `useRouter` import and `router` variable
+
+### Browser Testing
+- Tested via browser-use agent: login page, auth routes, private route redirections, favicon, responsiveness all working correctly
+- No console errors found after key prop fix
+
+---
+
+## 13. Useful Commands
 
 ```bash
 # Development
@@ -289,4 +304,7 @@ npx tsx db/seed.ts     # Insert seed data (idempotent, uses upsert)
 
 # Lint
 npm run lint           # Run ESLint
+
+# TypeScript Check (no build)
+npx tsc --noEmit       # Quick type check without building
 ```

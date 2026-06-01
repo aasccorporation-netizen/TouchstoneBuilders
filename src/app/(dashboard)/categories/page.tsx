@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FolderTree, Edit, Trash2, Package } from "lucide-react";
-import Link from "next/link";
+import { Plus, FolderTree, Trash2, Package } from "lucide-react";
 import { toast } from "sonner";
 
 type Category = {
@@ -40,10 +39,8 @@ export default function CategoriesPage() {
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [saving, setSaving] = useState(false);
-  const supabase = createClient();
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  async function fetchData() {
+    const supabase = createClient();
     const { data: cats } = await supabase
       .from("categories")
       .select("*")
@@ -59,12 +56,14 @@ export default function CategoriesPage() {
       if (p.category_id) counts[p.category_id] = (counts[p.category_id] || 0) + 1;
     }
     setProductCounts(counts);
-    setLoading(false);
-  }, [supabase]);
+  }
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    (async () => {
+      await fetchData();
+      setLoading(false);
+    })();
+  }, []);
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +75,7 @@ export default function CategoriesPage() {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
+    const supabase = createClient();
     const { error } = await supabase.from("categories").insert({
       name: newName.trim(),
       slug,
@@ -99,6 +99,7 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete category "${name}"? Products in this category will be uncategorized.`)) return;
 
+    const supabase = createClient();
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) {
       toast.error(error.message);

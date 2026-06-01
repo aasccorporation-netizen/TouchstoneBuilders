@@ -140,7 +140,7 @@ const suppliers: Supplier[] = [
   { name: "Roofing Supply Depot", contact_person: "Chris Taylor", phone: "(800) 888-9999", email: "chris@roofingsupply.com" },
 ];
 
-async function upsert(path: string, data: any[], conflictColumn: string) {
+async function upsert<T>(path: string, data: T[]) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
     method: "POST",
     headers: {
@@ -168,11 +168,11 @@ async function main() {
   console.log("Seeding Touchstone Builders Database...\n");
 
   console.log("Inserting categories...");
-  const insertedCategories = await upsert("/rest/v1/categories", categories, "slug");
+  const insertedCategories = await upsert("/rest/v1/categories", categories);
   console.log(`  ✓ ${insertedCategories.length || categories.length} categories`);
 
   // Build slug -> ID map from server response or from existing data
-  let categoryMap = new Map<string, string>();
+  const categoryMap = new Map<string, string>();
   if (insertedCategories.length > 0) {
     for (const cat of insertedCategories) {
       categoryMap.set(cat.slug, cat.id);
@@ -198,15 +198,15 @@ async function main() {
   }));
 
   console.log("Inserting products...");
-  await upsert("/rest/v1/products", productPayload, "sku");
+  await upsert("/rest/v1/products", productPayload);
   console.log(`  ✓ ${products.length} products`);
 
   console.log("Inserting customers...");
-  await upsert("/rest/v1/customers", customers, "phone");
+  await upsert("/rest/v1/customers", customers);
   console.log(`  ✓ ${customers.length} customers`);
 
   console.log("Inserting suppliers...");
-  await upsert("/rest/v1/suppliers", suppliers, "name");
+  await upsert("/rest/v1/suppliers", suppliers);
   console.log(`  ✓ ${suppliers.length} suppliers`);
 
   console.log("\n✅ Database seeding complete!");
